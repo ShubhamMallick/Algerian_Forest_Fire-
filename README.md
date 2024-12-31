@@ -105,7 +105,3 @@ The threshold for predicting fire occurrence is derived from the dataset:
 ## License
 
 This project is for educational purposes only and is not licensed for commercial use.
-
----
-
-For any issues or suggestions, please contact [Shubham Mallick](mailto:shubhammallick678@gmail.com).
