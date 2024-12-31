@@ -26,33 +26,45 @@ def index():
 @app.route('/predictdata', methods=['GET', 'POST'])
 def predict_datapoint():
     result = ""
+    fwi_value = None
 
     if request.method == 'POST':
-        # Gather inputs from the form
-        Temperature = float(request.form.get('Temperature'))
-        RH = float(request.form.get('RH'))
-        Ws = float(request.form.get('Ws'))
-        FFMC = float(request.form.get('FFMC'))
-        DMC = float(request.form.get('DMC'))
-        ISI = float(request.form.get('ISI'))
-        BUI = float(request.form.get('BUI'))
+        try:
+            # Gather inputs from the form
+            Temperature = float(request.form.get('Temperature'))
+            RH = float(request.form.get('RH'))
+            Ws = float(request.form.get('Ws'))
+            Rain = float(request.form.get('Rain'))  # Optional, might exclude
+            FFMC = float(request.form.get('FFMC'))
+            DMC = float(request.form.get('DMC'))
+            DC = float(request.form.get('DC'))  # Optional, might exclude
+            ISI = float(request.form.get('ISI'))
+            BUI = float(request.form.get('BUI'))
 
-        # Only pass the relevant features to the model
-        input_features = [Temperature, RH, Ws, FFMC, DMC, ISI, BUI]
+            # Use only required features
+            input_features = [Temperature, RH, Ws, FFMC, DMC, ISI, BUI]
 
-        # Preprocess and predict
-        new_data = scaler.transform([input_features])  # Transform using scaler
-        predict = model.predict(new_data)  # Predict with the model
+            # Preprocess inputs
+            new_data = scaler.transform([input_features])  # Scale the input features
 
-        # Return the prediction result
-        if predict[0] == 1:
-            result = 'Fire'
-        else:
-            result = 'No Fire'
+            # Predict the fire risk using the model
+            predict = model.predict(new_data)
 
-        return render_template('home.html', result=result)
+            # Calculate the FWI based on the dataset's analyzed formula
+            fwi_value = 0.3 * FFMC + 0.4 * ISI + 0.3 * BUI
+
+            # Adjust result based on FWI threshold
+            if fwi_value >= 6.00:
+                result = "Fire"
+            else:
+                result = "No Fire"
+
+        except ValueError as e:
+            result = f"Error: {e}"
+
+        return render_template('home.html', result=result, fwi_value=fwi_value)
     else:
-        return render_template('home.html', result=result)
+        return render_template('home.html', result=result, fwi_value=fwi_value)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
